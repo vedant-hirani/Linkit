@@ -1,0 +1,185 @@
+enum UserStatus {
+    INVITED
+    VERIFIED
+}
+
+model User {
+    id                  String              @id @default(uuid())
+    name                String?
+    email               String?             @unique
+    pictureUrl          String?             @default('https://i.imgur.com/ZdJSK3Y.jpeg')
+    tokenInvitation     String?
+
+    status              UserStatus          @default(VERIFIED)
+
+    // this is the role of the user for the application
+    globalRole          String              @default('USER')
+    password            String?             @password @omit
+    createdAt           DateTime            @default(now())
+    updatedAt           DateTime            @updatedAt @default(now())
+
+    pwaSubscriptions    PwaSubscription[]   @relation("user")
+
+    eventsAsCreator     Event[]             @relation("creator")
+    communitysAsCreator Community[]         @relation("creator")
+    eventRegistrations  EventRegistration[] @relation("user")
+    communityMembers    CommunityMember[]   @relation("user")
+    discussions         Discussion[]        @relation("user")
+    notifications       Notification[]      @relation("user")
+    mentorshipsAsMentor Mentorship[]        @relation("mentor")
+    mentorshipsAsMentee Mentorship[]        @relation("mentee")
+    achievements        Achievement[]       @relation("user")
+
+    @@auth()
+    @@allow("all", auth().id == this.id)
+    @@allow('all', auth().globalRole == 'ADMIN')
+
+    //we only allow that user to register if they don't create an admin role
+    @@allow("create", globalRole != 'ADMIN')
+    @@allow("read", true)
+}
+
+model Event {
+
+    id                 String              @id @default(uuid())
+    title              String
+    description        String?
+    location           String?
+    date               String
+    category           String?
+    status             String?
+    imageUrl           String?
+    documentUrl        String?
+
+    creatorId          String
+    creator            User?               @relation(fields: [creatorId], references: [id], name: "creator")
+
+    eventRegistrations EventRegistration[] @relation("event")
+    createdAt          DateTime            @default(now())
+    updatedAt          DateTime            @updatedAt @default(now())
+    @@allow("all", true)
+}
+
+model Community {
+
+    id               String            @id @default(uuid())
+    name             String
+    description      String?
+    category         String?
+    location         String?
+    imageUrl         String?
+
+    creatorId        String
+    creator          User?             @relation(fields: [creatorId], references: [id], name: "creator")
+
+    communityMembers CommunityMember[] @relation("community")
+    discussions      Discussion[]      @relation("community")
+    createdAt        DateTime          @default(now())
+    updatedAt        DateTime          @updatedAt @default(now())
+    @@allow("all", true)
+}
+
+model EventRegistration {
+
+    id        String   @id @default(uuid())
+    status    String?
+    feedback  String?
+    rating    Float?
+
+    eventId   String
+    event     Event?   @relation(fields: [eventId], references: [id], name: "event")
+    userId    String
+    user      User?    @relation(fields: [userId], references: [id], name: "user")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt @default(now())
+    @@allow("all", true)
+}
+
+model CommunityMember {
+
+    id          String     @id @default(uuid())
+    role        String
+
+    communityId String
+    community   Community? @relation(fields: [communityId], references: [id], name: "community")
+    userId      String
+    user        User?      @relation(fields: [userId], references: [id], name: "user")
+
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt @default(now())
+    @@allow("all", true)
+}
+
+model Discussion {
+
+    id          String     @id @default(uuid())
+    content     String
+
+    communityId String
+    community   Community? @relation(fields: [communityId], references: [id], name: "community")
+    userId      String
+    user        User?      @relation(fields: [userId], references: [id], name: "user")
+
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt @default(now())
+    @@allow("all", true)
+}
+
+model Notification {
+
+    id        String   @id @default(uuid())
+    type      String
+    content   String
+    isRead    Boolean
+
+    userId    String
+    user      User?    @relation(fields: [userId], references: [id], name: "user")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt @default(now())
+    @@allow("all", true)
+}
+
+model Mentorship {
+
+    id        String   @id @default(uuid())
+    status    String
+
+    mentorId  String
+    mentor    User?    @relation(fields: [mentorId], references: [id], name: "mentor")
+    menteeId  String
+    mentee    User?    @relation(fields: [menteeId], references: [id], name: "mentee")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt @default(now())
+    @@allow("all", true)
+}
+
+model Achievement {
+
+    id        String   @id @default(uuid())
+    type      String
+    badge     String?
+    points    Float?
+
+    userId    String
+    user      User?    @relation(fields: [userId], references: [id], name: "user")
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt @default(now())
+    @@allow("all", true)
+}
+
+model PwaSubscription {
+    id        String   @id @default(uuid())
+    content   String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt @default(now())
+
+    userId    String   @default(auth().id)
+    user      User     @relation(fields: [userId], references: [id], name: 'user')
+
+    @@allow("all", true)
+}
+
