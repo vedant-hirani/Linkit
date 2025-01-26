@@ -11,7 +11,8 @@ export const Theme = {
     colorWarning: '#faad14',
     colorTextBase: 'black',
     colorLink: 'black',
-    colorBgBase: 'white',
+    colorBgBase: 'linear-gradient(45deg, #f3f4f6, #e4e4e7)',
+
     colorBgContainer: 'white',
     colorBorder: '#d4d4d8',
     colorBorderSecondary: '#e4e4e7',
